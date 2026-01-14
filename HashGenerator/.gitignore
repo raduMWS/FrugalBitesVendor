@@ -1,0 +1,30 @@
+# Build outputs
+bin/
+obj/
+out/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Visual Studio
+.vs/
+
+# NuGet
+*.nupkg
+**/packages/*
+
+# JetBrains
+*.DotSettings.user

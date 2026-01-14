@@ -19,7 +19,7 @@ export type RootStackParamList = {
   Login: undefined;
   MainTabs: undefined;
   CreateOffer: undefined;
-  EditOffer: { offerId: number };
+  EditOffer: { offerId: string };
 };
 
 export type TabParamList = {
