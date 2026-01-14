@@ -3,6 +3,10 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { OfferDTO, OfferCategory, DietaryType } from '../types/offer';
 import { AuthResponse, LoginRequest, SignUpRequest } from '../types/auth';
+import { logger } from './logger';
+
+// Create a contextual logger for API calls
+const apiLogger = logger.withContext('API');
 
 // Token management
 let authToken: string | null = null;
@@ -62,7 +66,9 @@ const api = axios.create({
 // Add request interceptor for logging and auth token
 api.interceptors.request.use(
   (config) => {
-    console.log('API Request:', config.method?.toUpperCase(), config.url);
+    apiLogger.debug(`Request: ${config.method?.toUpperCase()} ${config.url}`, {
+      params: config.params,
+    });
     // Add auth token if available
     if (authToken) {
       config.headers.Authorization = `Bearer ${authToken}`;
@@ -70,7 +76,7 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('API Request Error:', error);
+    apiLogger.error('Request failed', { error: error.message });
     return Promise.reject(error);
   }
 );
@@ -78,11 +84,15 @@ api.interceptors.request.use(
 // Add response interceptor for logging
 api.interceptors.response.use(
   (response) => {
-    console.log('API Response:', response.status, response.config.url);
+    apiLogger.debug(`Response: ${response.status} ${response.config.url}`);
     return response;
   },
   (error) => {
-    console.error('API Response Error:', error.response?.status, error.message);
+    apiLogger.error('Response error', {
+      status: error.response?.status,
+      message: error.message,
+      url: error.config?.url,
+    });
     return Promise.reject(error);
   }
 );

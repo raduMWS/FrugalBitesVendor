@@ -1,5 +1,9 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import { logger } from './logger';
+
+// Create a contextual logger for API calls
+const apiLogger = logger.withContext('API');
 
 const API_BASE_URL = 'http://192.168.1.53:3000/api';
 
@@ -13,6 +17,7 @@ const api = axios.create({
 
 // Add auth token to requests
 api.interceptors.request.use(async (config) => {
+  apiLogger.debug(`Request: ${config.method?.toUpperCase()} ${config.url}`);
   const token = await SecureStore.getItemAsync('vendor_auth_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -20,22 +25,36 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+// Add response interceptor for logging
+api.interceptors.response.use(
+  (response) => {
+    apiLogger.debug(`Response: ${response.status} ${response.config.url}`);
+    return response;
+  },
+  (error) => {
+    apiLogger.error('Response error', {
+      status: error.response?.status,
+      message: error.message,
+      url: error.config?.url,
+    });
+    return Promise.reject(error);
+  }
+);
+
 // Auth Service
 export const authService = {
   async loginMerchant(email: string, password: string) {
-    console.log('API: Calling login endpoint:', `${API_BASE_URL}/auth/login`);
+    apiLogger.info('Attempting login', { email });
     try {
       const response = await api.post('/auth/login', { email, password });
-      console.log('API: Login successful, status:', response.status);
+      apiLogger.info('Login successful');
       return response.data;
     } catch (error: any) {
-      console.error('API: Login failed:', error.message);
-      if (error.response) {
-        console.error('API: Response status:', error.response.status);
-        console.error('API: Response data:', error.response.data);
-      } else if (error.request) {
-        console.error('API: No response received - network error');
-      }
+      apiLogger.error('Login failed', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
       throw error;
     }
   },
